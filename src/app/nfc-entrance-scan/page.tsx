@@ -39,8 +39,6 @@ function NFCEntranceScanContent() {
   //   }, 3000);
   // };
 
-  const [scannedData, setScannedData] = useState<string | null>(null);
-
   const handleStartScan = async () => {
     try {
       if ("NDEFReader" in window) {
