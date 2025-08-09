@@ -47,13 +47,33 @@ function NFCEntranceScanContent() {
         setIsScanning(true);
 
         const ndef = new (window as any).NDEFReader();
-        // await ndef.scan();
-        await ndef.write(
-          "CPID:MAIN_ENTRANCE\nTS:2025-08-09T14:32:00Z\nSIG:a7f93c29b998e49f0afbe13c5c96b76d"
-        );
+        await ndef.scan();
+        // await ndef.scan(
+        //   "CPID:MAIN_ENTRANCE\nTS:2025-08-09T14:32:00Z\nSIG:a7f93c29b998e49f0afbe13c5c96b76d"
+        // );
 
-        ndef.onreadingerror = () => {
-          console.error("Error reading NFC tag");
+        ndef.onreading = (event: any) => {
+          const decoder = new TextDecoder();
+          let tagContent = "";
+          for (const record of event.message.records) {
+            tagContent += decoder.decode(record.data) + "\n";
+          }
+
+          const lines = tagContent.trim().split("\n");
+          const data: Record<string, string> = {};
+          lines.forEach((line) => {
+            const [key, value] = line.split(":");
+            data[key] = value;
+          });
+
+          // Example: validate CPID
+          if (data.CPID === "MAIN_ENTRANCE") {
+            setScanComplete(true);
+          } else {
+            alert("Invalid checkpoint tag");
+          }
+
+          setScannedData(tagContent);
           setIsScanning(false);
         };
       } else {
@@ -76,7 +96,7 @@ function NFCEntranceScanContent() {
       etaToHospital,
       waitingTimeIfOnTime,
     });
-    // router.push(`/indoor-navigation?${params.toString()}`);
+    router.push(`/indoor-navigation?${params.toString()}`);
   };
 
   if (!mounted) return null;
