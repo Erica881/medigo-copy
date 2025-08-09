@@ -47,21 +47,10 @@ function NFCEntranceScanContent() {
         setIsScanning(true);
 
         const ndef = new (window as any).NDEFReader();
-        await ndef.scan();
-
-        ndef.onreading = (event: any) => {
-          const decoder = new TextDecoder();
-          let tagContent = "";
-          for (const record of event.message.records) {
-            const text = decoder.decode(record.data);
-            tagContent += text + "\n";
-          }
-          console.log("NFC Record:", tagContent); // still log to console
-          alert(`Scanned NFC content: ${tagContent}`);
-          setScannedData(tagContent); // store in UI
-          setScanComplete(true);
-          setIsScanning(false);
-        };
+        // await ndef.scan();
+        await ndef.write(
+          "CPID:MAIN_ENTRANCE\nTS:2025-08-09T14:32:00Z\nSIG:a7f93c29b998e49f0afbe13c5c96b76d"
+        );
 
         ndef.onreadingerror = () => {
           console.error("Error reading NFC tag");
