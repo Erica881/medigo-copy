@@ -29,14 +29,50 @@ function NFCEntranceScanContent() {
     router.back();
   };
 
-  const handleStartScan = () => {
-    setIsScanning(true);
+  // const handleStartScan = () => {
+  //   setIsScanning(true);
 
-    // Simulate NFC scanning process
-    setTimeout(() => {
-      setScanComplete(true);
+  //   // Simulate NFC scanning process
+  //   setTimeout(() => {
+  //     setScanComplete(true);
+  //     setIsScanning(false);
+  //   }, 3000);
+  // };
+
+  const [scannedData, setScannedData] = useState<string | null>(null);
+
+  const handleStartScan = async () => {
+    try {
+      if ("NDEFReader" in window) {
+        setIsScanning(true);
+
+        const ndef = new (window as any).NDEFReader();
+        await ndef.scan();
+
+        ndef.onreading = (event: any) => {
+          const decoder = new TextDecoder();
+          let tagContent = "";
+          for (const record of event.message.records) {
+            const text = decoder.decode(record.data);
+            tagContent += text + "\n";
+          }
+          console.log("NFC Record:", tagContent); // still log to console
+          setScannedData(tagContent); // store in UI
+          setScanComplete(true);
+          setIsScanning(false);
+        };
+
+        ndef.onreadingerror = () => {
+          console.error("Error reading NFC tag");
+          setIsScanning(false);
+        };
+      } else {
+        alert("Web NFC is not supported on this device/browser.");
+      }
+    } catch (error) {
+      console.error(error);
       setIsScanning(false);
-    }, 3000);
+    }
   };
 
   const handleScanComplete = () => {
