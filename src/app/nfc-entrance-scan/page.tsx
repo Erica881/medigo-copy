@@ -57,6 +57,7 @@ function NFCEntranceScanContent() {
             tagContent += text + "\n";
           }
           console.log("NFC Record:", tagContent); // still log to console
+          alert(`Scanned NFC content: ${tagContent}`);
           setScannedData(tagContent); // store in UI
           setScanComplete(true);
           setIsScanning(false);
@@ -87,14 +88,6 @@ function NFCEntranceScanContent() {
       waitingTimeIfOnTime,
     });
     // router.push(`/indoor-navigation?${params.toString()}`);
-    {
-      scannedData && (
-        <div className="bg-yellow-50 text-yellow-800 p-3 rounded-lg text-sm text-left">
-          <strong>NFC Data:</strong>
-          <pre className="whitespace-pre-wrap">{scannedData}</pre>
-        </div>
-      );
-    }
   };
 
   if (!mounted) return null;
