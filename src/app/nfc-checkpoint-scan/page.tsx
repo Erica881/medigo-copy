@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function NFCCheckpointScanContent() {
@@ -9,6 +9,11 @@ function NFCCheckpointScanContent() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const [scannedData, setScannedData] = useState<string | null>(null);
+
+  // Store the current NDEFReader so we can stop/reset it
+  const ndefRef = useRef<any>(null);
 
   const hospitalName =
     searchParams.get("hospitalName") || "Singapore General Hospital";
@@ -58,46 +63,55 @@ function NFCCheckpointScanContent() {
 
   const handleStartScan = async () => {
     try {
-      if ("NDEFReader" in window) {
-        setIsScanning(true);
-
-        const ndef = new (window as any).NDEFReader();
-        await ndef.scan();
-        // await ndef.scan(
-        //   "CPID:MAIN_ENTRANCE\nTS:2025-08-09T14:32:00Z\nSIG:a7f93c29b998e49f0afbe13c5c96b76d"
-        // );
-
-        // Reset old listener
-        ndef.onreading = null;
-
-        // Add new listener
-        ndef.onreading = (event: any) => {
-          const decoder = new TextDecoder();
-          let tagContent = "";
-          for (const record of event.message.records) {
-            tagContent += decoder.decode(record.data) + "\n";
-          }
-
-          const lines = tagContent.trim().split("\n");
-          const data: Record<string, string> = {};
-          lines.forEach((line) => {
-            const [key, value] = line.split(":");
-            data[key] = value;
-          });
-
-          // Example: validate CPID
-          if (data.CPID === "ELEVATOR") {
-            setScanComplete(true);
-            setIsScanning(false);
-          } else {
-            setScanComplete(false); // reset
-            setIsScanning(false); // stop scanning
-            alert("Invalid checkpoint tag");
-          }
-        };
-      } else {
+      if (!("NDEFReader" in window)) {
         alert("Web NFC is not supported on this device/browser.");
+        return;
       }
+
+      setIsScanning(true);
+      setScanComplete(false);
+      setScannedData(null);
+
+      // If there’s an old reader, stop it
+      if (ndefRef.current) {
+        ndefRef.current.onreading = null;
+        try {
+          await ndefRef.current.abort?.();
+        } catch {}
+      }
+
+      const ndef = new (window as any).NDEFReader();
+      ndefRef.current = ndef;
+
+      await ndef.scan();
+
+      // Ensure only ONE listener is active
+      ndef.onreading = (event: any) => {
+        const decoder = new TextDecoder();
+        let tagContent = "";
+        for (const record of event.message.records) {
+          tagContent += decoder.decode(record.data) + "\n";
+        }
+
+        const lines = tagContent.trim().split("\n");
+        const data: Record<string, string> = {};
+        lines.forEach((line) => {
+          const [key, value] = line.split(":");
+          data[key] = value;
+        });
+
+        if (data.CPID === "MAIN_ENTRANCE") {
+          setScanComplete(true);
+          setScannedData(tagContent);
+        } else {
+          setScanComplete(false);
+          alert("Invalid checkpoint tag. Please try again.");
+        }
+
+        // Stop scanning after reading once
+        ndef.onreading = null;
+        setIsScanning(false);
+      };
     } catch (error) {
       console.error(error);
       setIsScanning(false);
