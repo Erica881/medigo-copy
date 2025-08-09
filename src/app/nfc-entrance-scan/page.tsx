@@ -69,11 +69,12 @@ function NFCEntranceScanContent() {
           // Example: validate CPID
           if (data.CPID === "MAIN_ENTRANCE") {
             setScanComplete(true);
+            setIsScanning(false);
           } else {
+            setScanComplete(false); // reset
+            setIsScanning(false); // stop scanning
             alert("Invalid checkpoint tag");
-            window.location.reload();
           }
-          setIsScanning(false);
         };
       } else {
         alert("Web NFC is not supported on this device/browser.");
