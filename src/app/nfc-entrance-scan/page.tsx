@@ -71,9 +71,8 @@ function NFCEntranceScanContent() {
             setScanComplete(true);
           } else {
             alert("Invalid checkpoint tag");
+            window.location.reload();
           }
-
-          setScannedData(tagContent);
           setIsScanning(false);
         };
       } else {
