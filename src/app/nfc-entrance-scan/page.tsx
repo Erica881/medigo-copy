@@ -86,7 +86,15 @@ function NFCEntranceScanContent() {
       etaToHospital,
       waitingTimeIfOnTime,
     });
-    router.push(`/indoor-navigation?${params.toString()}`);
+    // router.push(`/indoor-navigation?${params.toString()}`);
+    {
+      scannedData && (
+        <div className="bg-yellow-50 text-yellow-800 p-3 rounded-lg text-sm text-left">
+          <strong>NFC Data:</strong>
+          <pre className="whitespace-pre-wrap">{scannedData}</pre>
+        </div>
+      );
+    }
   };
 
   if (!mounted) return null;
