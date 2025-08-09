@@ -67,6 +67,10 @@ function NFCCheckpointScanContent() {
         //   "CPID:MAIN_ENTRANCE\nTS:2025-08-09T14:32:00Z\nSIG:a7f93c29b998e49f0afbe13c5c96b76d"
         // );
 
+        // Reset old listener
+        ndef.onreading = null;
+
+        // Add new listener
         ndef.onreading = (event: any) => {
           const decoder = new TextDecoder();
           let tagContent = "";
