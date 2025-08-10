@@ -30,8 +30,8 @@ function NFCCheckpointScanContent() {
 
   const checkpointData = {
     "2": {
-      title: "Checkpoint 2: Elevator Area",
-      subtitle: "Scan NFC at Elevator Area",
+      title: "Checkpoint 1: Registration Area",
+      subtitle: "Scan NFC at Registration Area",
       description: "Hold your phone near the NFC tag at the elevator area",
       instruction:
         "Great! You've reached the elevator area. Please scan to continue.",
@@ -39,7 +39,7 @@ function NFCCheckpointScanContent() {
       color: "blue",
     },
     "3": {
-      title: "Checkpoint 3: Department Reception",
+      title: "Destination: Department Reception",
       subtitle: "Final Destination Scan",
       description:
         "Hold your phone near the NFC tag at the department reception",
@@ -61,62 +61,72 @@ function NFCCheckpointScanContent() {
     router.back();
   };
 
-  const handleStartScan = async () => {
-    try {
-      if (!("NDEFReader" in window)) {
-        alert("Web NFC is not supported on this device/browser.");
-        return;
-      }
+  const handleStartScan = () => {
+    setIsScanning(true);
 
-      setIsScanning(true);
-      setScanComplete(false);
-      setScannedData(null);
-
-      // If there’s an old reader, stop it
-      if (ndefRef.current) {
-        ndefRef.current.onreading = null;
-        try {
-          await ndefRef.current.abort?.();
-        } catch {}
-      }
-
-      const ndef = new (window as any).NDEFReader();
-      ndefRef.current = ndef;
-
-      await ndef.scan();
-
-      // Ensure only ONE listener is active
-      ndef.onreading = (event: any) => {
-        const decoder = new TextDecoder();
-        let tagContent = "";
-        for (const record of event.message.records) {
-          tagContent += decoder.decode(record.data) + "\n";
-        }
-
-        const lines = tagContent.trim().split("\n");
-        const data: Record<string, string> = {};
-        lines.forEach((line) => {
-          const [key, value] = line.split(":");
-          data[key] = value;
-        });
-
-        if (data.CPID === "MAIN_ENTRANCE") {
-          setScanComplete(true);
-          setScannedData(tagContent);
-        } else {
-          setScanComplete(false);
-          alert("Invalid checkpoint tag. Please try again.");
-        }
-
-        // Stop scanning after reading once
-        ndef.onreading = null;
-        setIsScanning(false);
-      };
-    } catch (error) {
-      console.error(error);
+    // Simulate NFC scanning process
+    setTimeout(() => {
+      setScanComplete(true);
       setIsScanning(false);
-    }
+    }, 3000);
   };
+
+  // const handleStartScan = async () => {
+  //   try {
+  //     if (!("NDEFReader" in window)) {
+  //       alert("Web NFC is not supported on this device/browser.");
+  //       return;
+  //     }
+
+  //     setIsScanning(true);
+  //     setScanComplete(false);
+  //     setScannedData(null);
+
+  //     // If there’s an old reader, stop it
+  //     if (ndefRef.current) {
+  //       ndefRef.current.onreading = null;
+  //       try {
+  //         await ndefRef.current.abort?.();
+  //       } catch {}
+  //     }
+
+  //     const ndef = new (window as any).NDEFReader();
+  //     ndefRef.current = ndef;
+
+  //     await ndef.scan();
+
+  //     // Ensure only ONE listener is active
+  //     ndef.onreading = (event: any) => {
+  //       const decoder = new TextDecoder();
+  //       let tagContent = "";
+  //       for (const record of event.message.records) {
+  //         tagContent += decoder.decode(record.data) + "\n";
+  //       }
+
+  //       const lines = tagContent.trim().split("\n");
+  //       const data: Record<string, string> = {};
+  //       lines.forEach((line) => {
+  //         const [key, value] = line.split(":");
+  //         data[key] = value;
+  //       });
+
+  //       if (data.CPID === "MAIN_ENTRANCE") {
+  //         setScanComplete(true);
+  //         setScannedData(tagContent);
+  //       } else {
+  //         setScanComplete(false);
+  //         alert("Invalid checkpoint tag. Please try again.");
+  //       }
+
+  //       // Stop scanning after reading once
+  //       ndef.onreading = null;
+  //       setIsScanning(false);
+  //     };
+  //   } catch (error) {
+  //     console.error(error);
+  //     setIsScanning(false);
+  //   }
+  // };
 
   const handleScanComplete = () => {
     if (checkpoint === "3") {
